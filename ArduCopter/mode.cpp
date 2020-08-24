@@ -32,6 +32,7 @@ Copter::Mode::Mode(void) :
 { };
 
 // return the static controller object corresponding to supplied mode
+//从模式的数字（它使用不同数字代替不同模式）。返回具体哪种mode
 Copter::Mode *Copter::mode_from_mode_num(const uint8_t mode)
 {
     Copter::Mode *ret = nullptr;
@@ -155,6 +156,10 @@ Copter::Mode *Copter::mode_from_mode_num(const uint8_t mode)
             break;
 #endif
 
+        case DRAWSTAR:
+            ret = &mode_DrawStar;
+            break;
+
         default:
             break;
     }
@@ -240,8 +245,8 @@ bool Copter::set_mode(control_mode_t mode, mode_reason_t reason)
 }
 
 // update_flight_mode - calls the appropriate attitude controllers based on flight mode
-// called at 100hz or more
-void Copter::update_flight_mode()
+// called at 100hz or more -- 定时调用
+void Copter::update_flight_mode()   //fast_loop()中以400Hz调用
 {
     // Update EKF speed limit - used to limit speed when we are using optical flow
     ahrs.getEkfControlLimits(ekfGndSpdLimit, ekfNavVelGainScaler);

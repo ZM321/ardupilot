@@ -451,6 +451,11 @@ void Copter::one_hz_loop()
     // indicates that the sensor or subsystem is present but not
     // functioning correctly
     update_sensor_status_flags();
+
+    gcs().send_text(MAV_SEVERITY_CRITICAL,
+                    "Current altitude: %.1fm",
+                      copter.flightmode->get_alt_above_ground()/100.0f);
+
 }
 
 // called at 50hz

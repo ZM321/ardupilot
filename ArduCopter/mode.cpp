@@ -155,8 +155,13 @@ Copter::Mode *Copter::mode_from_mode_num(const uint8_t mode)
             break;
 #endif
 
+        case QIXI:
+            ret = &mode_QiXi;
+            break;
+
         default:
             break;
+
     }
 
     return ret;

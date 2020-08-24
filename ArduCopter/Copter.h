@@ -973,6 +973,7 @@ private:
 #if MODE_FOLLOW_ENABLED == ENABLED
     ModeFollow mode_follow;
 #endif
+    ModeQiXi mode_QiXi;
 #if MODE_GUIDED_ENABLED == ENABLED
     ModeGuided mode_guided;
 #endif

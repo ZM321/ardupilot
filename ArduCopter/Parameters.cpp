@@ -41,6 +41,10 @@ const AP_Param::Info Copter::var_info[] = {
     // @Description: Allows setting an individual MAVLink system id for this vehicle to distinguish it from others on the same network
     // @Range: 1 255
     // @User: Advanced
+    /*
+     * 这行语句就是定义一个参数，sysid_this_mav为对应变量，"SYSID_THISMAV"为在地面站里要显示的名称，
+     * MAV_SYSTEM_ID为参数的默认值
+     * */
     GSCALAR(sysid_this_mav, "SYSID_THISMAV",   MAV_SYSTEM_ID),
 
     // @Param: SYSID_MYGCS
@@ -985,6 +989,8 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Path: ../libraries/AP_Follow/AP_Follow.cpp
     AP_SUBGROUPINFO(follow, "FOLL", 27, ParametersG2, AP_Follow),
 #endif
+
+    AP_GROUPINFO("STAR_R_CM", 28, ParametersG2, star_radius_cm, 1000),
 
     AP_GROUPEND
 };

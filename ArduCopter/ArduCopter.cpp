@@ -317,8 +317,10 @@ void Copter::update_batt_compass(void)
 void Copter::update_OpenMV(void)
 {
     openmv.update();
+    if(openmv.update())                //在顶层添加调用日志的程序。       就是这两行语句if(openmv.update())   Log_Write_OpenMV();
+        Log_Write_OpenMV();            //如果openmv成功解析一帧，那么就调用Log_Write_OpenMV()这个函数，这样就可以每来一帧存储一帧，
+                                       //然后从mission planner中下载下来，就可以分析图像识别的状态
 }
-
 // Full rate logging of attitude, rate and pid loops
 // should be run at 400hz
 void Copter::fourhundred_hz_logging()

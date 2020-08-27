@@ -92,6 +92,31 @@ void Copter::Log_Write_Optflow()
  #endif     // OPTFLOW == ENABLED
 }
 
+/*
+ * 添加一个自定义程序包含如下几步：
+ * 第一：定义一个日志的结构体，   如此处定义的log_OpenMV结构体
+ *                             其中日志结构体都是一样的，先有头LOG_PACKET_HEADER; 再有时间uint64_t time_us;，然后下面是自定义的
+ * 第二步 ：定义完日志结构体紧跟着是定义一个往结构体中存数的程序，此时需要定义一个函数Log_Write_OpenMV
+ * */
+struct PACKED log_OpenMV{
+    LOG_PACKET_HEADER;
+    uint64_t time_us;   //用来记录这个日志是哪一个时刻被记录下来的
+    uint8_t cx;
+    uint8_t cy;
+};
+
+//Write an OpenMV packet
+void Copter::Log_Write_OpenMV()        //此函数实现之前，先要在Copter.h中把Log_Write_OpenMV定义出来
+{
+    struct log_OpenMV pkt = {
+            LOG_PACKET_HEADER_INIT(LOG_OPENMV_MSG),      //头初始化，固定格式
+            time_us         : AP_HAL::micros64(),        //填入时间
+            cx              : openmv.cx,                 //填充cx
+            cy              : openmv.cy,                 //填充cy
+    };
+    DataFlash.WriteBlock(&pkt, sizeof(pkt));
+}
+
 struct PACKED log_Control_Tuning {
     LOG_PACKET_HEADER;
     uint64_t time_us;
@@ -503,6 +528,11 @@ const struct LogStructure Copter::log_structure[] = {
     { LOG_OPTFLOW_MSG, sizeof(log_Optflow),
       "OF",   "QBffff",   "TimeUS,Qual,flowX,flowY,bodyX,bodyY", "s-EEEE", "F-0000" },
 #endif
+      //OMV是简称，这个值将最终在mission planner日志中显示
+      //QBB：存储几何变量的数据类型,Q对应64位的数-指的对应的微妙TimeUS，B对应8位的数，因为两个数cx和cy，所以有两个B
+      //"s--", "F--"表示的是单位和放大系数，不用改
+    { LOG_OPENMV_MSG, sizeof(log_OpenMV),
+      "OMV",   "QBB",   "TimeUS,cx,xy", "s--", "F--" },
     { LOG_CONTROL_TUNING_MSG, sizeof(log_Control_Tuning),
       "CTUN", "Qffffffefcfhh", "TimeUS,ThI,ABst,ThO,ThH,DAlt,Alt,BAlt,DSAlt,SAlt,TAlt,DCRt,CRt", "s----mmmmmmnn", "F----00B0BBBB" },
     { LOG_MOTBATT_MSG, sizeof(log_MotBatt),

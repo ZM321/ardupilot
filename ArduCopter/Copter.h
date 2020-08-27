@@ -796,6 +796,7 @@ private:
 
     // Log.cpp
     void Log_Write_Optflow();
+    void Log_Write_OpenMV();
     void Log_Write_Control_Tuning();
     void Log_Write_Performance();
     void Log_Write_Attitude();

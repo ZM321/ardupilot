@@ -316,10 +316,72 @@ void Copter::update_batt_compass(void)
 
 void Copter::update_OpenMV(void)
 {
-    openmv.update();
-    if(openmv.update())                //在顶层添加调用日志的程序。       就是这两行语句if(openmv.update())   Log_Write_OpenMV();
-        Log_Write_OpenMV();            //如果openmv成功解析一帧，那么就调用Log_Write_OpenMV()这个函数，这样就可以每来一帧存储一帧，
-                                       //然后从mission planner中下载下来，就可以分析图像识别的状态
+    //模拟一个用来产生openmv识别结果的代码
+    //simulation
+    bool sim_openmv_new_data = false;           //是否有新的数据过来
+    static uint32_t last_sim_new_data_time_ms = 0;  //最后一次仿真新的数据时间。。是一个静态类型，即这个函数每次被调用完以后，
+                                                    //它不会被销毁，下一次被调用还保存上一次的值
+    if(control_mode != GUIDED){
+        last_sim_new_data_time_ms = millis();
+        openmv.cx = 80;
+        openmv.cy = 60;
+    }else if (millis()- last_sim_new_data_time_ms < 15000){
+        sim_openmv_new_data = true;
+        openmv.last_frame_ms = millis();
+        openmv.cx = 1;
+        openmv.cy = 1;
+    }else if (millis()- last_sim_new_data_time_ms < 30000){
+        sim_openmv_new_data = true;
+        openmv.last_frame_ms = millis();
+        openmv.cx = 160;
+        openmv.cy = 120;
+    }else{
+        sim_openmv_new_data = false;
+        openmv.cx = 80;
+        openmv.cy = 60;
+    }
+    //end of simulation code
+
+    static uint32_t last_set_pos_target_time_ms = 0;
+    Vector3f target = Vector3f(0, 0, 0);
+    if(openmv.update() || sim_openmv_new_data) {
+        //if(openmv.update())                //在顶层添加调用日志的程序。       就是这两行语句if(openmv.update())   Log_Write_OpenMV();
+        //    Log_Write_OpenMV();            //如果openmv成功解析一帧，那么就调用Log_Write_OpenMV()这个函数，这样就可以每来一帧存储一帧，
+                                             //然后从mission planner中下载下来，就可以分析图像识别的状态
+        Log_Write_OpenMV();
+
+        if(control_mode != GUIDED)
+            return;
+
+        int16_t target_body_frame_y = (int16_t)openmv.cx - 80;  //QQVGA 160 * 120
+        int16_t target_body_frame_z = (int16_t)openmv.cy - 60;
+
+        float angle_y_deg = target_body_frame_y * 60.0f / 160.0f;
+        float angle_z_deg = target_body_frame_z * 60.0f / 120.0f;
+
+        Vector3f v = Vector3f(1.0f, tanf(radians(angle_y_deg)), tanf(radians(angle_z_deg)));
+        v = v / v.length();
+
+        const Matrix3f &rotMat = copter.ahrs.get_rotation_body_to_ned();
+        v = rotMat * v;
+
+        target = v * 10000.0f;     //distance 100m
+
+        target.z = -target.z;       //ned to neu
+
+        Vector3f current_pos = inertial_nav.get_position();
+        target = target + current_pos;
+
+        if(millis() - last_set_pos_target_time_ms > 500) {   //call in 20hz
+            //wp_nav->set_wp_destinaton(target, false);
+            mode_guided.set_destination(target, false, 0, true, 0, false);
+            last_set_pos_target_time_ms = millis();
+
+        }
+
+    }
+
+
 }
 // Full rate logging of attitude, rate and pid loops
 // should be run at 400hz

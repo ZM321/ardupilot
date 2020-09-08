@@ -38,6 +38,7 @@ public:
         AP_BeaconType_None   = 0,
         AP_BeaconType_Pozyx  = 1,
         AP_BeaconType_Marvelmind = 2,
+        AP_BeaconType_YCHIOT = 3,
         AP_BeaconType_SITL   = 10
     };
 
@@ -96,6 +97,19 @@ public:
 
     // return fence boundary array
     const Vector2f* get_boundary_points(uint16_t& num_points) const;
+
+    AP_Float anchor_0_x;
+    AP_Float anchor_0_y;
+    AP_Float anchor_0_z;
+    AP_Float anchor_1_x;
+    AP_Float anchor_1_y;
+    AP_Float anchor_1_z;
+    AP_Float anchor_2_x;
+    AP_Float anchor_2_y;
+    AP_Float anchor_2_z;
+    AP_Float anchor_3_x;
+    AP_Float anchor_3_y;
+    AP_Float anchor_3_z;
 
     static const struct AP_Param::GroupInfo var_info[];
 

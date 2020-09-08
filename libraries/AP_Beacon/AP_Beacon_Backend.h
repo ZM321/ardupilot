@@ -41,6 +41,11 @@ public:
     // pos should be in the beacon's local frame
     void set_beacon_position(uint8_t beacon_instance, const Vector3f& pos);
 
+    Vector3f get_anchor_0_pos() { return Vector3f(_frontend.anchor_0_x, _frontend.anchor_0_y, _frontend.anchor_0_z); }
+    Vector3f get_anchor_1_pos() { return Vector3f(_frontend.anchor_1_x, _frontend.anchor_1_y, _frontend.anchor_1_z); }
+    Vector3f get_anchor_2_pos() { return Vector3f(_frontend.anchor_2_x, _frontend.anchor_2_y, _frontend.anchor_2_z); }
+    Vector3f get_anchor_3_pos() { return Vector3f(_frontend.anchor_3_x, _frontend.anchor_3_y, _frontend.anchor_3_z); }
+
     float get_beacon_origin_lat(void) const { return _frontend.origin_lat; }
     float get_beacon_origin_lon(void) const { return _frontend.origin_lon; }
     float get_beacon_origin_alt(void) const { return _frontend.origin_alt; }

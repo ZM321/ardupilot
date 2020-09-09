@@ -431,36 +431,12 @@ void AP_GPS::detect_instance(uint8_t instance)
         goto found_gps;
         break;
 
-#if HAL_WITH_UAVCAN
-    // user has to explicitly set the UAVCAN type, do not use AUTO
+        // user has to explicitly set the UAVCAN type, do not use AUTO
     case GPS_TYPE_UAVCAN:
+#if HAL_WITH_UAVCAN
         dstate->auto_detected_baud = false; // specified, not detected
-        if (AP_BoardConfig_CAN::get_can_num_ifaces() == 0) {
-            return;
-        }
-        for (uint8_t i = 0; i < MAX_NUMBER_OF_CAN_DRIVERS; i++) {
-            AP_UAVCAN *ap_uavcan = AP_UAVCAN::get_uavcan(i);
-            if (ap_uavcan == nullptr) {
-                continue;
-            }
-            
-            uint8_t gps_node = ap_uavcan->find_gps_without_listener();
-            if (gps_node == UINT8_MAX) {
-                continue;
-            }
-
-            new_gps = new AP_GPS_UAVCAN(*this, state[instance], nullptr);
-            ((AP_GPS_UAVCAN*) new_gps)->set_uavcan_manager(i);
-            if (ap_uavcan->register_gps_listener_to_node(new_gps, gps_node)) {
-                if (AP_BoardConfig_CAN::get_can_debug() >= 2) {
-                    printf("AP_GPS_UAVCAN registered\n\r");
-                }
-                goto found_gps;
-            } else {
-                delete new_gps;
-            }
-        }
-        return;
+               new_gps = AP_GPS_UAVCAN::probe(*this, state[instance]);
+               goto found_gps;
 #endif
 
     default:
@@ -727,7 +703,10 @@ void AP_GPS::update(void)
     } else {
         // use switch logic to find best GPS
         uint32_t now = AP_HAL::millis();
-        if (_auto_switch >= 1) {
+        if (_auto_switch >= 3) {
+            // select the second GPS instance
+                       primary_instance = 1;
+        } else if (_auto_switch >= 1) {
             // handling switching away from blended GPS
             if (primary_instance == GPS_BLENDED_INSTANCE) {
                 primary_instance = 0;
@@ -1122,10 +1101,6 @@ bool AP_GPS::get_lag(uint8_t instance, float &lag_sec) const
     // always enusre a lag is provided
     lag_sec = GPS_WORST_LAG_SEC;
 
-    if (instance >= GPS_MAX_INSTANCES) {
-        return false;
-    }
-
     // return lag of blended GPS
     if (instance == GPS_BLENDED_INSTANCE) {
         lag_sec = _blended_lag_sec;
@@ -1154,17 +1129,12 @@ bool AP_GPS::get_lag(uint8_t instance, float &lag_sec) const
 // return a 3D vector defining the offset of the GPS antenna in meters relative to the body frame origin
 const Vector3f &AP_GPS::get_antenna_offset(uint8_t instance) const
 {
-    if (instance >= GPS_MAX_INSTANCES) {
-        // we have to return a reference so use instance 0
-        return _antenna_offset[0];
-    }
-
-    if (instance == GPS_BLENDED_INSTANCE) {
+    if (instance == GPS_MAX_RECEIVERS) {
         // return an offset for the blended GPS solution
         return _blended_antenna_offset;
+    } else {
+        return _antenna_offset[instance];
     }
-
-    return _antenna_offset[instance];
 }
 
 /*
@@ -1552,20 +1522,9 @@ void AP_GPS::calc_blended_state(void)
     timing[GPS_BLENDED_INSTANCE].last_message_time_ms = (uint32_t)temp_time_2;
 }
 
-bool AP_GPS::is_healthy(uint8_t instance) const
-{
-    if (instance >= GPS_MAX_INSTANCES) {
-        return false;
-    }
-
-    bool last_msg_valid = last_message_delta_time_ms(instance) < GPS_MAX_DELTA_MS;
-
-    if (instance == GPS_BLENDED_INSTANCE) {
-        return last_msg_valid && blend_health_check();
-    }
-
-    return last_msg_valid &&
-           drivers[instance] != nullptr &&
+bool AP_GPS::is_healthy(uint8_t instance) const {
+    return drivers[instance] != nullptr &&
+           last_message_delta_time_ms(instance) < GPS_MAX_DELTA_MS &&
            drivers[instance]->is_healthy();
 }
 

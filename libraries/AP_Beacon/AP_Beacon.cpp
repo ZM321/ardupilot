@@ -17,7 +17,10 @@
 #include "AP_Beacon_Backend.h"
 #include "AP_Beacon_Pozyx.h"
 #include "AP_Beacon_Marvelmind.h"
+#include "AP_Beacon_YCHIOT.h"
 #include "AP_Beacon_SITL.h"
+
+AP_Beacon *AP_Beacon::_singleton;
 
 extern const AP_HAL::HAL &hal;
 
@@ -27,7 +30,7 @@ const AP_Param::GroupInfo AP_Beacon::var_info[] = {
     // @Param: _TYPE
     // @DisplayName: Beacon based position estimation device type
     // @Description: What type of beacon based position estimation device is connected
-    // @Values: 0:None,1:Pozyx,2:Marvelmind
+    // @Values: 0:None,1:Pozyx,3:YCHIOT
     // @User: Advanced
     AP_GROUPINFO("_TYPE",    0, AP_Beacon, _type, 0),
 
@@ -43,9 +46,7 @@ const AP_Param::GroupInfo AP_Beacon::var_info[] = {
     // @Param: _LONGITUDE
     // @DisplayName: Beacon origin's longitude
     // @Description: Beacon origin's longitude
-    // @Units: deg
-    // @Increment: 0.000001
-    // @Range: -180 180
+    // @Increment: 1
     // @User: Advanced
     AP_GROUPINFO("_LONGITUDE", 2, AP_Beacon, origin_lon, 0),
 
@@ -67,12 +68,97 @@ const AP_Param::GroupInfo AP_Beacon::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("_ORIENT_YAW", 4, AP_Beacon, orient_yaw, 0),
 
+    // @Param: _A0_X
+    // @DisplayName: YCHIOT_ANCHOR_0_X
+    // @Description: YCHIOT_ANCHOR_0_X
+    // @Units: m
+    // @User: Advanced
+    AP_GROUPINFO("_A0_X", 5, AP_Beacon, anchor_0_x, 0.0f),
+
+    // @Param: _A0_Y
+    // @DisplayName: YCHIOT_ANCHOR_0_Y
+    // @Description: YCHIOT_ANCHOR_0_Y
+    // @Units: m
+    // @User: Advanced
+    AP_GROUPINFO("_A0_Y", 6, AP_Beacon, anchor_0_y, 0.0f),
+
+    // @Param: _A0_Z
+    // @DisplayName: YCHIOT_ANCHOR_0_Z
+    // @Description: YCHIOT_ANCHOR_0_Z
+    // @Units: m
+    // @User: Advanced
+    AP_GROUPINFO("_A0_Z", 7, AP_Beacon, anchor_0_z, 0.0f),
+
+    // @Param: _A1_X
+    // @DisplayName: YCHIOT_ANCHOR_1_X
+    // @Description: YCHIOT_ANCHOR_1_X
+    // @Units: m
+    // @User: Advanced
+    AP_GROUPINFO("_A1_X", 8, AP_Beacon, anchor_1_x, 0.0f),
+
+    // @Param: _A1_Y
+    // @DisplayName: YCHIOT_ANCHOR_1_Y
+    // @Description: YCHIOT_ANCHOR_1_Y
+    // @Units: m
+    // @User: Advanced
+    AP_GROUPINFO("_A1_Y", 9, AP_Beacon, anchor_1_y, 0.0f),
+
+    // @Param: _A1_Z
+    // @DisplayName: YCHIOT_ANCHOR_1_Z
+    // @Description: YCHIOT_ANCHOR_1_Z
+    // @Units: m
+    // @User: Advanced
+    AP_GROUPINFO("_A1_Z", 10, AP_Beacon, anchor_1_z, 0.0f),
+
+    // @Param: _A2_X
+    // @DisplayName: YCHIOT_ANCHOR_2_X
+    // @Description: YCHIOT_ANCHOR_2_X
+    // @Units: m
+    // @User: Advanced
+    AP_GROUPINFO("_A2_X", 11, AP_Beacon, anchor_2_x, 0.0f),
+
+    // @Param: _A2_Y
+    // @DisplayName: YCHIOT_ANCHOR_2_Y
+    // @Description: YCHIOT_ANCHOR_2_Y
+    // @Units: m
+    // @User: Advanced
+    AP_GROUPINFO("_A2_Y", 12, AP_Beacon, anchor_2_y, 0.0f),
+
+    // @Param: _A2_Z
+    // @DisplayName: YCHIOT_ANCHOR_2_Z
+    // @Description: YCHIOT_ANCHOR_2_Z
+    // @Units: m
+    // @User: Advanced
+    AP_GROUPINFO("_A2_Z", 13, AP_Beacon, anchor_2_z, 0.0f),
+
+    // @Param: _A3_X
+    // @DisplayName: YCHIOT_ANCHOR_3_X
+    // @Description: YCHIOT_ANCHOR_3_X
+    // @Units: m
+    // @User: Advanced
+    AP_GROUPINFO("_A3_X", 14, AP_Beacon, anchor_3_x, 0.0f),
+
+    // @Param: _A3_Y
+    // @DisplayName: YCHIOT_ANCHOR_3_Y
+    // @Description: YCHIOT_ANCHOR_3_Y
+    // @Units: m
+    // @User: Advanced
+    AP_GROUPINFO("_A3_Y", 15, AP_Beacon, anchor_3_y, 0.0f),
+
+    // @Param: _A3_Z
+    // @DisplayName: YCHIOT_ANCHOR_3_Z
+    // @Description: YCHIOT_ANCHOR_3_Z
+    // @Units: m
+    // @User: Advanced
+    AP_GROUPINFO("_A3_Z", 16, AP_Beacon, anchor_3_z, 0.0f),
+
     AP_GROUPEND
 };
 
 AP_Beacon::AP_Beacon(AP_SerialManager &_serial_manager) :
     serial_manager(_serial_manager)
 {
+    _singleton = this;
     AP_Param::setup_object_defaults(this, var_info);
 }
 
@@ -89,6 +175,8 @@ void AP_Beacon::init(void)
         _driver = new AP_Beacon_Pozyx(*this, serial_manager);
     } else if (_type == AP_BeaconType_Marvelmind) {
         _driver = new AP_Beacon_Marvelmind(*this, serial_manager);
+    } else if (_type == AP_BeaconType_YCHIOT) {
+        _driver = new AP_Beacon_YCHIOT(*this, serial_manager);
     }
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
     if (_type == AP_BeaconType_SITL) {
@@ -373,4 +461,13 @@ const Vector2f* AP_Beacon::get_boundary_points(uint16_t& num_points) const
 bool AP_Beacon::device_ready(void) const
 {
     return ((_driver != nullptr) && (_type != AP_BeaconType_None));
+}
+
+AP_Beacon_Backend *AP_Beacon::get_backend(void) const {
+    if (_driver != nullptr) {
+        if (_driver->type() == AP_BeaconType_YCHIOT) {
+            return _driver;
+        }
+    }
+    return nullptr;
 }

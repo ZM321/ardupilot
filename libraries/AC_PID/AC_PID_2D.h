@@ -31,6 +31,7 @@ public:
     Vector2f    get_i();
     Vector2f    get_i_shrink();   // get_i but do not allow integrator to grow (it may shrink)
     Vector2f    get_d();
+    Vector2f    get_ff(Vector2f requested_rate);
 
     // reset_I - reset the integrator
     void        reset_I();
@@ -88,6 +89,7 @@ protected:
     AP_Float        _imax;
     AP_Float        _filt_hz;                   // PID Input filter frequency in Hz
     AP_Float        _filt_d_hz;                 // D term filter frequency in Hz
+    AP_Float        _ff;
 
     // flags
     struct ac_pid_flags {

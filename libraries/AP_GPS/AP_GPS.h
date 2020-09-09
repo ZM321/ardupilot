@@ -22,7 +22,7 @@
 #include <AP_Vehicle/AP_Vehicle.h>
 #include "GPS_detect_state.h"
 #include <AP_SerialManager/AP_SerialManager.h>
-#include <AP_RTC/AP_RTC.h>
+#include <DataFlash/DataFlash2.h>
 
 /**
    maximum number of GPS instances available on this platform. If more
@@ -61,6 +61,7 @@ class AP_GPS
     friend class AP_GPS_SBP2;
     friend class AP_GPS_SIRF;
     friend class AP_GPS_UBLOX;
+    friend class AP_GPS_YCHIOT;
     friend class AP_GPS_Backend;
 
 public:
@@ -90,7 +91,8 @@ public:
         GPS_TYPE_GSOF  = 11,
         GPS_TYPE_ERB = 13,
         GPS_TYPE_MAV = 14,
-        GPS_TYPE_NOVA = 15
+        GPS_TYPE_NOVA = 15,
+        GPS_TYPE_YCHIOT = 16
     };
 
     /// GPS status codes
@@ -223,6 +225,7 @@ public:
 
     // 3D velocity in NED format
     const Vector3f &velocity(uint8_t instance) const {
+        DataFlash2::instance()->Log_Write_GPSVEL(state[instance].velocity.x, state[instance].velocity.y, state[instance].velocity.z);
         return state[instance].velocity;
     }
     const Vector3f &velocity() const {

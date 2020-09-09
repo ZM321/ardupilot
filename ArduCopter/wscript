@@ -30,6 +30,7 @@ def build(bld):
             'AP_Stats',
             'AP_Beacon',
             'AP_Arming',
+            'AP_Bitmask',           
             'AP_WheelEncoder',
             'AP_Winch',
             'AP_Follow',

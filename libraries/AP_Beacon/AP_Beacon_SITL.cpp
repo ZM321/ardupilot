@@ -72,8 +72,8 @@ void AP_Beacon_SITL::update(void)
 
     // where the beacon system origin is located
     Location beacon_origin;
-    beacon_origin.lat = get_beacon_origin_lat() * 1.0e7;
-    beacon_origin.lng = get_beacon_origin_lon() * 1.0e7;
+    beacon_origin.lat = get_beacon_origin_lat();
+    beacon_origin.lng = get_beacon_origin_lon();
     beacon_origin.alt = get_beacon_origin_alt() * 1.0e2;
 
     // position of each beacon

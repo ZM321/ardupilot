@@ -136,6 +136,7 @@
 #endif
 #if RANGEFINDER_ENABLED == ENABLED
  # include <AP_RangeFinder/AP_RangeFinder.h>
+ # include <AP_RangeFinder/RangeFinder_Backend.h>
 #endif
 #if PROXIMITY_ENABLED == ENABLED
  # include <AP_Proximity/AP_Proximity.h>
@@ -228,6 +229,7 @@ private:
 
     // Dataflash
     DataFlash_Class DataFlash;
+    DataFlash2      DataFlash_2;
 
     AP_GPS gps;
 

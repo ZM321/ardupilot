@@ -255,6 +255,17 @@ void Copter::init_disarm_motors()
     gcs().send_text(MAV_SEVERITY_INFO, "Disarming motors");
 #endif
 
+#if FRAME_CONFIG == HELI_FRAME
+        // force descent rate and call position controller
+        pos_control->set_alt_target_from_climb_rate(-abs(g.land_speed), G_Dt, false);
+        heli_flags.init_targets_on_arming=true;
+        if (ap.land_complete_maybe) {
+            pos_control->relax_alt_hold_controllers(0.0f);
+        }
+#else
+        pos_control->relax_alt_hold_controllers(0.0f);   // forces throttle output to go to zero
+#endif
+
     // save compass offsets learned by the EKF if enabled
     if (ahrs.use_compass() && compass.get_learn_type() == Compass::LEARN_EKF) {
         for(uint8_t i=0; i<COMPASS_MAX_INSTANCES; i++) {

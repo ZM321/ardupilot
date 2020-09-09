@@ -191,6 +191,12 @@ public:
         k_param_circle_nav,
         k_param_loiter_nav,     // 105
 
+        //
+        // 106: My class
+        //
+        k_param_event_manager,
+        k_param_DataFlash_2,    // 107
+
         // 110: Telemetry control
         //
         k_param_gcs0 = 110,

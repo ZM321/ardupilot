@@ -336,6 +336,7 @@ public:
     */
     void writeExtNavData(const Vector3f &sensOffset, const Vector3f &pos, const Quaternion &quat, float posErr, float angErr, uint32_t timeStamp_ms, uint32_t resetTime_ms);
 
+    int8_t get_ek2_alt_source() { return _altSource.get(); }
 private:
     uint8_t num_cores; // number of allocated cores
     uint8_t primary;   // current primary core

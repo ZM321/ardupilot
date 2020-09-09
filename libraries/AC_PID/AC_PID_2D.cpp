@@ -42,6 +42,11 @@ const AP_Param::GroupInfo AC_PID_2D::var_info[] = {
     // @Units: Hz
     AP_GROUPINFO("D_FILT", 5, AC_PID_2D, _filt_d_hz, AC_PID_2D_FILT_D_HZ_DEFAULT),
 
+    // @Param: FF
+    // @DisplayName: FF FeedForward Gain
+    // @Description: FF Gain which produces an output value that is proportional to the demanded input
+    AP_GROUPINFO("FF",   6, AC_PID_2D, _ff, 0),
+
     AP_GROUPEND
 };
 
@@ -58,6 +63,7 @@ AC_PID_2D::AC_PID_2D(float initial_p, float initial_i, float initial_d, float in
     _imax = fabsf(initial_imax);
     filt_hz(initial_filt_hz);
     filt_d_hz(initial_filt_d_hz);
+    _ff = 0.0f;
 
     // reset input filter to first value received and derivitive to zero
     reset_filter();
@@ -244,4 +250,9 @@ void AC_PID_2D::calc_filt_alpha_d()
     // calculate alpha
     const float rc = 1/(M_2PI*_filt_d_hz);
     _filt_alpha_d = _dt / (_dt + rc);
+}
+
+Vector2f AC_PID_2D::get_ff(Vector2f requested_rate)
+{
+    return requested_rate * _ff;
 }

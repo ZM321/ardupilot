@@ -622,6 +622,10 @@ const AP_Param::Info Copter::var_info[] = {
     // @Path: ../libraries/DataFlash/DataFlash.cpp
     GOBJECT(DataFlash,           "LOG",  DataFlash_Class),
 
+    // @Group: LOG2
+    // @Path: ../libraries/DataFlash/DataFlash2.cpp
+    GOBJECT(DataFlash_2,         "LOG2",  DataFlash2),
+
     // @Group: BATT
     // @Path: ../libraries/AP_BattMonitor/AP_BattMonitor.cpp
     GOBJECT(battery,                "BATT",         AP_BattMonitor),
